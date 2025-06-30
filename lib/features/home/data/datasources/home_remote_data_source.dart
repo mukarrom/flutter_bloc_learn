@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'package:dio/dio.dart';
 import '../models/home_item_dto.dart';
 
@@ -13,34 +14,69 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
 
   @override
   Future<List<HomeItemDto>> getItems() async {
-    // In real implementation, this would make actual API call
-    // final response = await dio.get('/items');
-    // return (response.data as List).map((json) => HomeItemDto.fromJson(json)).toList();
-    
-    // Demo implementation
-    return [
-      HomeItemDto(
-        id: '1',
-        title: 'Item 1',
-        description: 'Description for item 1',
-        imageUrl: 'https://picsum.photos/200/300?random=1',
-        isFavorite: false,
-      ),
-      HomeItemDto(
-        id: '2',
-        title: 'Item 2',
-        description: 'Description for item 2',
-        imageUrl: 'https://picsum.photos/200/300?random=2',
-        isFavorite: false,
-      ),
-      HomeItemDto(
-        id: '3',
-        title: 'Item 3',
-        description: 'Description for item 3',
-        imageUrl: 'https://picsum.photos/200/300?random=3',
-        isFavorite: false,
-      ),
-    ];
+    try {
+      log('Fetching posts from API...');
+      
+      // Add headers that might be required by the API
+      final headers = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      };
+
+      // Use a relative path since we set baseUrl in Dio options
+      final response = await dio.get<List<dynamic>>(
+        '/posts',
+        options: Options(
+          responseType: ResponseType.json,
+          headers: headers,
+          validateStatus: (status) => status! < 500, // Accept status codes < 500
+        ),
+      );
+
+      log('Response status: ${response.statusCode}');
+      
+      if (response.statusCode != 200) {
+        throw Exception('Failed to load posts: ${response.statusCode} - ${response.statusMessage}');
+      }
+
+      final List<dynamic> data = response.data ?? [];
+      log('Fetched ${data.length} posts');
+
+      // Verify the structure of the first item (if any)
+      if (data.isNotEmpty) {
+        log('First item structure: ${data.first}');
+      }
+
+      // Convert each post into our DTO
+      final items = data.map<HomeItemDto>((json) {
+        try {
+          final id = json['id']?.toString() ?? '0';
+          return HomeItemDto(
+            id: id,
+            title: json['title']?.toString() ?? 'No Title',
+            description: json['body']?.toString() ?? 'No Description',
+            imageUrl: 'https://picsum.photos/seed/$id/200/300',
+            isFavorite: false,
+          );
+        } catch (e) {
+          log('Error mapping item: $e');
+          log('Problematic item: $json');
+          rethrow;
+        }
+      }).toList();
+
+      log('Successfully converted ${items.length} items to DTOs');
+      return items;
+    } on DioException catch (e) {
+      log('Dio error: ${e.message}');
+      log('Response data: ${e.response?.data}');
+      log('Status code: ${e.response?.statusCode}');
+      log('Headers: ${e.response?.headers}');
+      rethrow;
+    } catch (e, stackTrace) {
+      log('Unexpected error in getItems: $e', error: e, stackTrace: stackTrace);
+      rethrow;
+    }
   }
 
   @override

@@ -21,10 +21,13 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   ) async {
     emit(HomeLoading());
     try {
+      print('Fetching items from repository...');
       final items = await repository.getItems();
+      print('Successfully fetched ${items.length} items');
       emit(HomeLoaded(items: items));
-    } catch (e) {
-      emit(HomeError(message: 'Failed to load items'));
+    } catch (e, stackTrace) {
+      print('Error in _onItemsRequested: $e\n$stackTrace');
+      emit(HomeError(message: 'Failed to load items: $e'));
     }
   }
 

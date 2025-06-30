@@ -26,23 +26,3 @@ class MainLayout extends StatelessWidget {
     );
   }
 }
-
-// import 'package:flutter/material.dart';
-// import 'package:flutter_bloc_learn/features/main_layout/presentation/widgets/bottom_nav_bar_widget.dart';
-// import 'package:flutter_bloc_learn/features/main_layout/presentation/widgets/my_drawer_widget.dart';
-
-// class MainLayout extends StatelessWidget {
-//   final Widget child;
-
-//   const MainLayout({super.key, required this.child});
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(title: const Text("Flutter Bloc")),
-//       drawer: MyDrawerWidget(),
-//       body: child,
-//       bottomNavigationBar: BottomNavBarWidget(),
-//     );
-//   }
-// }

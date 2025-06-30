@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:dio/dio.dart';
+
+import '../../data/datasources/home_remote_data_source.dart';
 import '../../data/repositories/home_repository_impl.dart';
 import '../bloc/home_bloc.dart';
 
@@ -11,10 +14,18 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create:
-          (context) =>
-              HomeBloc(repository: HomeRepositoryImpl())
-                ..add(HomeItemsRequested()),
+      create: (context) {
+        final dio = Dio();
+        // Add base options for better debugging
+        dio.options = BaseOptions(
+          baseUrl: 'https://jsonplaceholder.typicode.com',
+          connectTimeout: const Duration(seconds: 5),
+          receiveTimeout: const Duration(seconds: 3),
+        );
+        final remoteDataSource = HomeRemoteDataSourceImpl(dio: dio);
+        final repository = HomeRepositoryImpl(remoteDataSource: remoteDataSource);
+        return HomeBloc(repository: repository)..add(HomeItemsRequested());
+      },
       child: Scaffold(
         appBar: AppBar(title: const Text('Home')),
         body: BlocBuilder<HomeBloc, HomeState>(
